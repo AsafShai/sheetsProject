@@ -1,4 +1,5 @@
 import { Neo4JConnection } from "../database/Neo4JConnection";
+import { CustomError } from "../utils/CustomError";
 import {
     CellDBType,
     Column,
@@ -45,21 +46,20 @@ export class SheetsService {
                 sheet.id as sheetId,
                 columns
         `;
-    const session = neo4jDriver.session();
-    try {
-        const result = await session.run(getSheetQuery, { sheetId });
-        
-        if (result.records.length === 0) {
-            throw new Error("Sheet not found");
+        const session = neo4jDriver.session();
+        try {
+            const result = await session.run(getSheetQuery, { sheetId });
+
+            if (result.records.length === 0) {
+                throw new CustomError("Sheet not found", 404);
+            }
+
+            return result.records[0].toObject();
+        } catch (error) {
+            throw new CustomError("Error getting sheet", 500);
+        } finally {
+            await session.close();
         }
-        
-        return result.records[0].toObject();
-    } catch (error) {
-        console.error("Error getting sheet:", error);
-        throw error;
-    } finally {
-        await session.close();
-    }
     }
     static async setCellInSheet(
         setCellParams: SetCellInSheetParams,
@@ -84,7 +84,7 @@ export class SheetsService {
                 setCellParams
             );
         }
-        throw new Error("Method not implemented.");
+        throw new CustomError("Not Implemented", 501);
     }
 
     private static async getColumnType(
@@ -100,9 +100,16 @@ export class SheetsService {
             sheetId,
             columnName,
         };
-        const result = await neo4jDriver.session().run(query, params);
-        const columnType: ColumnType = result.records[0].get("type");
-        return columnType;
+        const session = neo4jDriver.session();
+        try {
+            const result = await session.run(query, params);
+            const columnType: ColumnType = result.records[0].get("type");
+            return columnType;
+        } catch (error) {
+            throw new CustomError("Error getting column by type", 500);
+        } finally {
+            await session.close();
+        }
     }
 
     private static async setCellByValue(
@@ -112,7 +119,7 @@ export class SheetsService {
         setCellParams: SetCellInSheetParams
     ): Promise<CellDBType> {
         if (!isSameType(value, columnType))
-            throw new Error("value type doesn't match column type");
+            throw new CustomError("Invalid value type", 400);
         const { sheetId, columnName }: SetCellInSheetParams = setCellParams;
         const query = `
         MATCH (s:Sheet {id: $sheetId})
@@ -134,9 +141,9 @@ export class SheetsService {
             const result = await session.run(query, params);
             return result.records[0].get("cell").properties;
         } catch (error) {
-            //FIXME: fix
-            console.error(error);
-            throw new Error("Error setting cell");
+            throw new CustomError("Error setting cell by value", 500);
+        } finally {
+            await session.close();
         }
     }
 
@@ -145,7 +152,7 @@ export class SheetsService {
         lookup: Lookup,
         setCellParams: SetCellInSheetParams
     ): Promise<CellDBType> {
-       throw new Error("Method not implemented.");
+        throw new CustomError("Not Implemented", 501);
     }
 
     static async createSheet(columns: Column[]): Promise<string> {
@@ -163,7 +170,13 @@ export class SheetsService {
             columns,
         };
         const session = neo4jDriver.session();
-        const result = await session.run(query, params);
-        return result.records[0].get("id");
+        try {
+            const result = await session.run(query, params);
+            return result.records[0].get("id");
+        } catch (error) {
+            throw new CustomError("Error creating sheet", 500);
+        } finally {
+            await session.close();
+        }
     }
 }
