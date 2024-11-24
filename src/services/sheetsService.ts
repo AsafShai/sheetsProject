@@ -30,8 +30,7 @@ export class SheetsService {
                         WHEN cell IS NULL THEN NULL
                         WHEN path IS NULL THEN cell.value
                         ELSE endCell.value
-                    END,
-                    hasLookup: EXISTS((cell)-[:LOOKUP]->())
+                    END
                 }) as cells
             ORDER BY column.name
             
