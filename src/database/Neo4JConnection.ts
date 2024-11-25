@@ -7,9 +7,9 @@ import { v4 as uuidv4 } from "uuid";
 export class Neo4JConnection implements IDatabaseConnection {
     private driver: Driver;
 
-    constructor() {
+    constructor(private uri: string, private username: string, private password: string) {
         console.log('Connecting to Neo4J...');
-        this.driver = neo4j.driver(NEO4J_URI, neo4j.auth.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
+        this.driver = neo4j.driver(uri, neo4j.auth.basic(username, password));
     }
     async getSheetById(sheetId: string): Promise<RecordShape> {
         const getSheetQuery = `

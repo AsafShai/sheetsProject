@@ -1,4 +1,3 @@
-import { Neo4JConnection } from "../database/Neo4JConnection";
 import { CustomError } from "../utils/CustomError";
 import {
     CellDBType,
