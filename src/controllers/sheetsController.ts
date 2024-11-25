@@ -31,6 +31,15 @@ export class SheetsController {
             res.status(400).json({ error: parsedSetCellBody.error });
             return;
         }
+        try {
+            const cell: CellDBType = await this.sheetsService.setCellInSheet(
+                setCellParams,
+                SetCellBody
+            );
+            res.status(200).json(cell);
+        } catch (error) {
+            next(error);
+        }
     }
 
     getSheetById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

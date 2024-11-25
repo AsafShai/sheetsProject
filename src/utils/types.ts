@@ -1,5 +1,10 @@
 import z from "zod";
-import { columnSchema, columnTypeEnum, lookupSchema, setCellInSheetBodySchema } from "./zodSchemas";
+import {
+    columnSchema,
+    columnTypeEnum,
+    lookupSchema,
+    setCellInSheetBodySchema,
+} from "./zodSchemas";
 import { Driver, RecordShape } from "neo4j-driver";
 
 export type ColumnType = z.infer<typeof columnTypeEnum>;
@@ -25,7 +30,6 @@ export type SetCellInSheetParams = {
 export type Lookup = z.infer<typeof lookupSchema>;
 export type SetCellInSheetBody = z.infer<typeof setCellInSheetBodySchema>;
 
-
 const typeLookup = {
     string: "string",
     int: "number",
@@ -40,9 +44,17 @@ export const isSameType = (value: unknown, columnType: ColumnType): boolean => {
     if (columnType === "double")
         return typeof value === "number" && !Number.isInteger(value);
     return typeof value === expectedType;
-}
+};
 
 export interface IDatabaseConnection {
     getDriver: () => Driver;
     closeConnection: () => Promise<void>;
+    getSheetById: (sheetId: string) => Promise<RecordShape>;
+    getColumnType: (sheetId: string, columnName: string) => Promise<ColumnType>;
+    setCellByValue: (
+        cellIndex: number,
+        value: unknown,
+        setCellParams: SetCellInSheetParams
+    ) => Promise<CellDBType>;
+    createSheet: (columns: Column[]) => Promise<string>;
 }
