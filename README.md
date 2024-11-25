@@ -24,14 +24,16 @@ The server should now be running and ready to accept api calls.
 
 ### Running Tests
 
-1. Install project dependencies:
+1. Navigate to the project directory where the `docker-compose.test.yaml` file is located
+
+2. Build the Docker containers:
 ```bash
-npm install
+docker compose -f .\docker-compose.test.yaml build
 ```
 
-2. Execute the test suite:
+3. Start the server:
 ```bash
-npm test
+docker compose -f .\docker-compose.test.yaml up --abort-on-container-exit
 ```
 
 ## API Endpoints
