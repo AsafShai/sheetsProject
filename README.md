@@ -8,16 +8,16 @@
 
 ### Setting Up the Server
 
-1. Navigate to the project directory where the `docker-compose.yaml` file is located
+1. Navigate to the project directory where the `docker-compose.prod.yaml` file is located
 
 2. Build the Docker containers:
 ```bash
-docker compose build
+docker compose -f docker-compose.prod.yaml build
 ```
 
 3. Start the server:
 ```bash
-docker compose up
+docker compose -f docker-compose.prod.yaml up
 ```
 
 The server should now be running and ready to accept api calls.

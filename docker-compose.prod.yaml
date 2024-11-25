@@ -4,7 +4,7 @@ services:
   sheets-service:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     container_name: sheets-service
     ports:
       - "3000:3000"
