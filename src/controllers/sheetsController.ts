@@ -13,11 +13,16 @@ import {
 import { SheetsService } from "../services/sheetsService";
 
 export class SheetsController {
-    static async setCellInSheet(
+
+    constructor(private readonly sheetsService: SheetsService) {
+        this.sheetsService = sheetsService;
+    }
+
+    setCellInSheet = async (
         req: Request<SetCellInSheetParams, SetCellInSheetBody>,
         res: Response,
         next: NextFunction
-    ): Promise<void> {
+    ): Promise<void> => {
         const setCellParams: SetCellInSheetParams = req.params;
         const SetCellBody: SetCellInSheetBody = req.body;
         const parsedSetCellBody =
@@ -26,38 +31,19 @@ export class SheetsController {
             res.status(400).json({ error: parsedSetCellBody.error });
             return;
         }
-
-        try {
-            const cell: CellDBType = await SheetsService.setCellInSheet(
-                setCellParams,
-                parsedSetCellBody.data
-            );
-            res.status(200).json({ cell });
-            return;
-        } catch (error) {
-            next(error);
-        }
     }
 
-    static async getSheetById(
-        req: Request,
-        res: Response,
-        next: NextFunction
-    ): Promise<void> {
+    getSheetById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const { sheetId } = req.params;
         try {
-            const sheet = await SheetsService.getSheetById(sheetId);
+            const sheet = await this.sheetsService.getSheetById(sheetId);
             res.status(200).json(sheet);
         } catch (error) {
             next(error);
         }
     }
 
-    static async createSheet(
-        req: Request,
-        res: Response,
-        next: NextFunction
-    ): Promise<void> {
+    createSheet = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const sheet = req.body;
         const parsedSheet = createSheetSchema.safeParse(sheet);
         if (!parsedSheet.success) {
@@ -71,7 +57,7 @@ export class SheetsController {
             return;
         }
         try {
-            const id = await SheetsService.createSheet(sheetColumns);
+            const id = await this.sheetsService.createSheet(sheetColumns);
             res.status(201).json({ id });
             return;
         } catch (error) {

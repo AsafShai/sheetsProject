@@ -2,7 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import sheetsRoutes from './routes/sheetsRoutes';
 import { PORT } from './utils/config';
-import { errorHandlerMiddleware } from './controllers/middlwares/errorHandlerMiddleware';
+import { errorHandlerMiddleware } from './middlwares/errorHandlerMiddleware';
 
 
 const app: Application = express();

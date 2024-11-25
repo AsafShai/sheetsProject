@@ -4,6 +4,7 @@ import {
     CellDBType,
     Column,
     ColumnType,
+    IDatabaseConnection,
     isSameType,
     Lookup,
     SetCellInSheetBody,
@@ -11,10 +12,12 @@ import {
 } from "../utils/types";
 import { v4 as uuidv4 } from "uuid";
 
-const neo4jDriver = Neo4JConnection.getInstance().getDriver();
-
 export class SheetsService {
-    static async getSheetById(sheetId: string) {
+
+    constructor(private db: IDatabaseConnection) {
+        this.db = db;
+    }
+    async getSheetById(sheetId: string) {
         const getSheetQuery = `
             MATCH (sheet:Sheet {id: $sheetId})
             MATCH (sheet)-[:HAS_COLUMN]->(column:Column)
@@ -45,7 +48,7 @@ export class SheetsService {
                 sheet.id as sheetId,
                 columns
         `;
-        const session = neo4jDriver.session();
+        const session = this.db.getDriver().session();
         try {
             const result = await session.run(getSheetQuery, { sheetId });
 
@@ -60,24 +63,24 @@ export class SheetsService {
             await session.close();
         }
     }
-    static async setCellInSheet(
+    async setCellInSheet(
         setCellParams: SetCellInSheetParams,
         setCellBody: SetCellInSheetBody
     ): Promise<CellDBType> {
         const { sheetId, columnName } = setCellParams;
         if (setCellBody.value) {
-            const columnType: ColumnType = await SheetsService.getColumnType(
+            const columnType: ColumnType = await this.getColumnType(
                 sheetId,
                 columnName
             );
-            return SheetsService.setCellByValue(
+            return this.setCellByValue(
                 setCellBody.cellIndex,
                 setCellBody.value,
                 columnType,
                 setCellParams
             );
         } else if (setCellBody.lookup) {
-            return SheetsService.setCellByLookup(
+            return this.setCellByLookup(
                 setCellBody.cellIndex,
                 setCellBody.lookup,
                 setCellParams
@@ -86,7 +89,7 @@ export class SheetsService {
         throw new CustomError("Not Implemented", 501);
     }
 
-    private static async getColumnType(
+    private async getColumnType(
         sheetId: string,
         columnName: string
     ): Promise<ColumnType> {
@@ -99,7 +102,7 @@ export class SheetsService {
             sheetId,
             columnName,
         };
-        const session = neo4jDriver.session();
+        const session = this.db.getDriver().session();
         try {
             const result = await session.run(query, params);
             const columnType: ColumnType = result.records[0].get("type");
@@ -111,7 +114,7 @@ export class SheetsService {
         }
     }
 
-    private static async setCellByValue(
+    private async setCellByValue(
         cellIndex: number,
         value: unknown,
         columnType: ColumnType,
@@ -135,7 +138,7 @@ export class SheetsService {
             cellIndex,
             value,
         };
-        const session = neo4jDriver.session();
+        const session = this.db.getDriver().session();
         try {
             const result = await session.run(query, params);
             return result.records[0].get("cell").properties;
@@ -146,7 +149,7 @@ export class SheetsService {
         }
     }
 
-    private static async setCellByLookup(
+    private async setCellByLookup(
         cellIndex: number,
         lookup: Lookup,
         setCellParams: SetCellInSheetParams
@@ -154,7 +157,7 @@ export class SheetsService {
         throw new CustomError("Not Implemented", 501);
     }
 
-    static async createSheet(columns: Column[]): Promise<string> {
+    async createSheet(columns: Column[]): Promise<string> {
         const query = `
             CREATE (s:Sheet {id: $id})
             WITH s
@@ -168,7 +171,7 @@ export class SheetsService {
             id: uuidv4(),
             columns,
         };
-        const session = neo4jDriver.session();
+        const session = this.db.getDriver().session();
         try {
             const result = await session.run(query, params);
             return result.records[0].get("id");

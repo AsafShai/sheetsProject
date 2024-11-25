@@ -1,5 +1,6 @@
 import z from "zod";
 import { columnSchema, columnTypeEnum, lookupSchema, setCellInSheetBodySchema } from "./zodSchemas";
+import { Driver, RecordShape } from "neo4j-driver";
 
 export type ColumnType = z.infer<typeof columnTypeEnum>;
 export type Column = z.infer<typeof columnSchema>;
@@ -39,4 +40,9 @@ export const isSameType = (value: unknown, columnType: ColumnType): boolean => {
     if (columnType === "double")
         return typeof value === "number" && !Number.isInteger(value);
     return typeof value === expectedType;
+}
+
+export interface IDatabaseConnection {
+    getDriver: () => Driver;
+    closeConnection: () => Promise<void>;
 }
